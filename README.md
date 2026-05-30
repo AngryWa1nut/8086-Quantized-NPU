@@ -11,8 +11,8 @@ The core accelerator computes the following mathematical layer forward pass:
 
 $$Y = \text{Clamp}\Big(\text{ReLU}(X \cdot W)\Big)$$
 
-* **Linear Transformation ($X \cdot W$):** Performs 16-bit signed integer Multiply-Accumulate (MAC) via `IMUL DL` and `ADD` over a $4 \times 7$ input activation matrix and a $7 \times 5$ weight matrix.
-* **Non-linear Activation (ReLU):** Implements dynamic sparsity mapping ($\max(0, x)$). Negative intermediate signals are pruned down to `0` instantly, eliminating irrelevant noise.
+* **Linear Transformation ($X \cdot W$):** Performs 16-bit signed integer Multiply-Accumulate via `IMUL DL` and `ADD` over a $4 \times 7$ input activation matrix and a $7 \times 5$ weight matrix.
+* **Non-linear Activation (ReLU):** Implements dynamic sparsity mapping ($$\text{Max}(0, x)$$). Negative intermediate signals are pruned down to `0` instantly, eliminating irrelevant noise.
 * **INT8 Saturating Quantization (Clamping):** Compresses the 16-bit wide accumulator space down to a deployable INT8 scale ($0 \le Y \le 127$). Strongly activated features exceeding the upper bound are safely saturated at `127` to prevent integer overflow.
 
 ## Evaluation & Simulation Results
