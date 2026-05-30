@@ -54,7 +54,7 @@ MOV BX,N*P ;handler of the position in the result matrix
 SUB BX,CX ;(# of multiplication - actual multiplication)*2 (word dimension)
 SHL BX,1 ;multiplication by 2                                       
 
-MOV rm_r0[BX],0 ;clear accumulator for the current output neuron
+MOV WORD PTR rm_r0[BX],0 ;clear accumulator for the current output neuron
 
 PUSH CX
 MOV CX,M
@@ -73,10 +73,13 @@ MOV CX,M
         ovfl:
         CMP AX,0 ;overflow direction follows the signed addend
         JGE positive
-            MOV rm_r0[BX],-32768
+            MOV WORD PTR rm_r0[BX],-32768
+            MOV AX,0
             JMP nextMul
             
-            positive: MOV rm_r0[BX],32767
+            positive: 
+            MOV WORD PTR rm_r0[BX],32767
+            MOV AX,0
          
     nextMul:
     INC SI
@@ -88,15 +91,15 @@ MOV CX,M
 ; ReLU is applied first, so negative final outputs become zero.
 ; This also covers the signed 8-bit lower bound because values below -128 are negative.
 reluClamp:
-CMP rm_r0[BX],0
-JGE clampHigh
-    MOV rm_r0[BX],0
+    CMP WORD PTR rm_r0[BX],0
+    JGE clampHigh
+    MOV WORD PTR rm_r0[BX],0
     JMP clampDone
 
 clampHigh:
-CMP rm_r0[BX],127
+CMP WORD PTR rm_r0[BX],127
 JLE clampDone
-    MOV rm_r0[BX],127
+    MOV WORD PTR rm_r0[BX],127
 
 clampDone:
 CMP DI,M*P ;checks if DI is at the end of the B matrix
