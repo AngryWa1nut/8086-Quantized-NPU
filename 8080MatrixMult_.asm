@@ -54,6 +54,8 @@ MOV BX,N*P ;handler of the position in the result matrix
 SUB BX,CX ;(# of multiplication - actual multiplication)*2 (word dimension)
 SHL BX,1 ;multiplication by 2                                       
 
+MOV rm_r0[BX],0 ;clear accumulator for the current output neuron
+
 PUSH CX
 MOV CX,M
 
@@ -69,8 +71,8 @@ MOV CX,M
     JO ovfl ;check overflow
     JMP nextMul
         ovfl:
-        SHL rm_r0[BX],1 ;check sign of the result
-        JC positive
+        CMP AX,0 ;overflow direction follows the signed addend
+        JGE positive
             MOV rm_r0[BX],-32768
             JMP nextMul
             
@@ -82,6 +84,21 @@ MOV CX,M
     
     LOOP mulLoop
 
+; ReLU activation and 8-bit signed saturation for the completed neuron.
+; ReLU is applied first, so negative final outputs become zero.
+; This also covers the signed 8-bit lower bound because values below -128 are negative.
+reluClamp:
+CMP rm_r0[BX],0
+JGE clampHigh
+    MOV rm_r0[BX],0
+    JMP clampDone
+
+clampHigh:
+CMP rm_r0[BX],127
+JLE clampDone
+    MOV rm_r0[BX],127
+
+clampDone:
 CMP DI,M*P ;checks if DI is at the end of the B matrix
 JE rst
     SUB SI,M
